@@ -10,7 +10,7 @@
     public class SagaPersister : ISagaPersister
     {
         private readonly Func<IDbConnection> _connectionFactory;
-        private readonly Func<Type, string> _typeMapper; 
+        private readonly Func<Type, string> _typeMapper;
 
         public SagaPersister(Func<IDbConnection> connectionFactory)
         {
@@ -23,13 +23,7 @@
         {
             using (var conn = _connectionFactory())
             {
-                var p = new DynamicParameters();
-                p.Add(":type", dbType: DbType.String, value: _typeMapper(saga.GetType()));
-                p.Add(":id", dbType: DbType.Guid, value: saga.Id);
-                p.Add(":originalmessageid", dbType: DbType.String, value: saga.OriginalMessageId);
-                p.Add(":originator", dbType: DbType.String, value: saga.Originator);
-                p.Add(":sagadata", dbType: DbType.String, value: JsonConvert.SerializeObject(saga));
-
+                var p = GetUpdateParameters(saga);
                 conn.Execute(
                     "INSERT INTO sagas(type, id, originalmessageid, originator, sagadata) VALUES (:type, :id, :originalmessageid, :originator, :sagadata)",
                     p);
@@ -38,33 +32,61 @@
 
         public void Update(IContainSagaData saga)
         {
+            using (var conn = _connectionFactory())
+            {
+                var p = GetUpdateParameters(saga);
+                conn.Execute(
+                    "UPDATE sagas SET originalmessageid = :originalmessageid, originator = :originator, sagadata = :sagadata WHERE type = :type AND id = :id",
+                    p);
+            }
         }
 
         public TSagaData Get<TSagaData>(Guid sagaId) where TSagaData : IContainSagaData
         {
-            using (var conn = _connectionFactory()) {
+            using (var conn = _connectionFactory())
+            {
                 var p = new DynamicParameters();
-                p.Add(":type", dbType: DbType.String, value: _typeMapper(typeof(TSagaData)));
+                p.Add(":type", dbType: DbType.String, value: _typeMapper(typeof (TSagaData)));
                 p.Add(":id", dbType: DbType.Guid, value: sagaId);
-                var data = conn.Query<string>("SELECT sagadata FROM sagas WHERE type = :type AND id = :id", p).FirstOrDefault();
-                if (data == default(string))
-                {
-                    return default(TSagaData);
-                }
-                else
-                {
-                    return JsonConvert.DeserializeObject<TSagaData>(data);
-                }
+                var data =
+                    conn.Query<string>("SELECT sagadata FROM sagas WHERE type = :type AND id = :id", p).FirstOrDefault();
+                return data == default(string) ? default(TSagaData) : JsonConvert.DeserializeObject<TSagaData>(data);
             }
         }
 
         public TSagaData Get<TSagaData>(string propertyName, object propertyValue) where TSagaData : IContainSagaData
         {
-            return default(TSagaData);
+            using (var conn = _connectionFactory()) {
+                var p = new DynamicParameters();
+                var search = "{" + JsonConvert.SerializeObject(propertyName) + ": " +
+                             JsonConvert.SerializeObject(propertyValue) + "}";
+                Console.WriteLine(search);
+                p.Add(":type", dbType: DbType.String, value: _typeMapper(typeof(TSagaData)));
+                p.Add(":jsonString", dbType: DbType.String, value: search);
+                var data =
+                    conn.Query<string>("SELECT sagadata FROM sagas WHERE type = :type AND sagadata @> :jsonString", p).FirstOrDefault();
+                return data == default(string) ? default(TSagaData) : JsonConvert.DeserializeObject<TSagaData>(data);
+            }
         }
 
         public void Complete(IContainSagaData saga)
         {
+            using (var conn = _connectionFactory())
+            {
+                conn.Execute("DELETE FROM sagas WHERE type = :type AND id = :id",
+                    new {type = _typeMapper(saga.GetType()), id = saga.Id});
+            }
+        }
+
+        private DynamicParameters GetUpdateParameters(IContainSagaData saga)
+        {
+            var p = new DynamicParameters();
+            p.Add(":type", dbType: DbType.String, value: _typeMapper(saga.GetType()));
+            p.Add(":id", dbType: DbType.Guid, value: saga.Id);
+            p.Add(":originalmessageid", dbType: DbType.String, value: saga.OriginalMessageId);
+            p.Add(":originator", dbType: DbType.String, value: saga.Originator);
+            p.Add(":sagadata", dbType: DbType.String, value: JsonConvert.SerializeObject(saga));
+            return p;
         }
 
         private void InitializePersistence()
@@ -73,6 +95,7 @@
             {
                 conn.Execute(
                     "CREATE TABLE IF NOT EXISTS sagas(type TEXT, id UUID, originalmessageid TEXT, originator TEXT, sagadata JSONB, PRIMARY KEY (type, id))");
+                conn.Execute("CREATE INDEX idx_sagas_json ON sagas USING gin (sagadata jsonb_path_ops);");
             }
         }
     }

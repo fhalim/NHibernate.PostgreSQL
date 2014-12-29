@@ -46,9 +46,48 @@
         {
             var persister = new SagaPersister(_connFactory);
             var id = Guid.NewGuid();
-            persister.Save(new FakeSagaData { CorrelationId = 123, Message = "Hello world", Id = id});
+            var originalSagaData = new FakeSagaData { CorrelationId = 123, Message = "Hello world", Id = id};
+            persister.Save(originalSagaData);
             var fakeSagaData = persister.Get<FakeSagaData>(id);
-            Assert.NotNull(fakeSagaData);
+            Assert.Equal(originalSagaData, fakeSagaData);
+        }
+
+        [Fact]
+        public void Completing_saga_should_delete_it()
+        {
+            var persister = new SagaPersister(_connFactory);
+            var id = Guid.NewGuid();
+            var originalSagaData = new FakeSagaData { CorrelationId = 123, Message = "Hello world", Id = id };
+            persister.Save(originalSagaData);
+            Assert.NotNull(persister.Get<FakeSagaData>(id));
+            persister.Complete(originalSagaData);
+            Assert.Null(persister.Get<FakeSagaData>(id));
+        }
+
+        [Fact]
+        public void Should_be_able_read_inserted_row_by_field_value()
+        {
+            var persister = new SagaPersister(_connFactory);
+            var id = Guid.NewGuid();
+            var originalSagaData = new FakeSagaData { CorrelationId = 123, Message = "Hello world", Id = id };
+            persister.Save(originalSagaData);
+            var fakeSagaData = persister.Get<FakeSagaData>("Message", "Hello world");
+            Assert.Equal(originalSagaData, fakeSagaData);
+
+            var fakeSagaDataByCorrelationId = persister.Get<FakeSagaData>("CorrelationId", 123);
+            Assert.Equal(originalSagaData, fakeSagaDataByCorrelationId);
+        }
+
+        [Fact]
+        public void Updates_should_take_effect()
+        {
+            var persister = new SagaPersister(_connFactory);
+            var id = Guid.NewGuid();
+            persister.Save(new FakeSagaData { CorrelationId = 123, Message = "Hello world", Id = id });
+            var updatedSagaData = new FakeSagaData { CorrelationId = 123, Message = "Hello world2", Id = id };
+            persister.Update(updatedSagaData);
+            var fakeSagaData = persister.Get<FakeSagaData>(id);
+            Assert.Equal(updatedSagaData, fakeSagaData);
         }
     }
 }
