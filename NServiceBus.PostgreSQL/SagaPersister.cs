@@ -6,7 +6,7 @@
     using Newtonsoft.Json;
     using Saga;
 
-    internal class SagaPersister : ISagaPersister
+    public class SagaPersister : ISagaPersister
     {
         private readonly Func<IDbConnection> _connectionFactory;
 
@@ -22,7 +22,7 @@
             {
                 var p = new DynamicParameters();
                 p.Add(":id", dbType: DbType.Guid, value: saga.Id);
-                p.Add(":originalmessageid", dbType: DbType.Guid, value: saga.OriginalMessageId);
+                p.Add(":originalmessageid", dbType: DbType.String, value: saga.OriginalMessageId);
                 p.Add(":originator", dbType: DbType.String, value: saga.Originator);
                 p.Add(":sagadata", dbType: DbType.String, value: JsonConvert.SerializeObject(saga));
 
@@ -55,7 +55,7 @@
             using (var conn = _connectionFactory())
             {
                 conn.Execute(
-                    "CREATE TABLE IF NOT EXISTS sagas(id UUID, originalmessageid UUID, originator text, sagadata JSON, PRIMARY KEY(id, originalmessageid, originator))");
+                    "CREATE TABLE IF NOT EXISTS sagas(id UUID, originalmessageid TEXT, originator TEXT, sagadata JSONB)");
             }
         }
     }
