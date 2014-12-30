@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.PostgreSQL
+﻿namespace NServiceBus.PostgreSQL.Saga
 {
     using System;
     using System.Collections.Generic;
@@ -6,12 +6,12 @@
     using System.Linq;
     using Dapper;
     using Newtonsoft.Json;
-    using Saga;
+    using NServiceBus.Saga;
 
     public class SagaPersister : ISagaPersister
     {
-        private readonly Func<IDbConnection> _connectionFactory;
         private static readonly Func<Type, string> TypeMapper = t => t.FullName;
+        private readonly Func<IDbConnection> _connectionFactory;
 
         public SagaPersister(ConnectionFactoryHolder connectionFactoryHolder)
         {
@@ -60,7 +60,6 @@
                 var p = new DynamicParameters();
                 var search = "{" + JsonConvert.SerializeObject(propertyName) + ": " +
                              JsonConvert.SerializeObject(propertyValue) + "}";
-                Console.WriteLine(search);
                 p.Add(":type", dbType: DbType.String, value: TypeMapper(typeof (TSagaData)));
                 p.Add(":jsonString", dbType: DbType.String, value: search);
                 var data =
@@ -79,7 +78,7 @@
             }
         }
 
-        private DynamicParameters GetUpdateParameters(IContainSagaData saga)
+        private static DynamicParameters GetUpdateParameters(IContainSagaData saga)
         {
             var p = new DynamicParameters();
             p.Add(":type", dbType: DbType.String, value: TypeMapper(saga.GetType()));
@@ -108,7 +107,7 @@
                     }
                 }
 
-                foreach(var sagaType in sagaTypes.Where(t=>UniqueAttribute.GetUniqueProperties(t).Any()))
+                foreach (var sagaType in sagaTypes.Where(t => UniqueAttribute.GetUniqueProperties(t).Any()))
                 {
                     var typeName = TypeMapper(sagaType);
                     var typeCollapsedName = typeName.Replace('.', '_');
@@ -123,11 +122,14 @@
                     try
                     {
                         conn.Execute(indexCreationStatement);
-                    } catch (Exception ex) {
-                        if (!ex.Message.Contains("already exists")) {
+                    }
+                    catch (Exception ex)
+                    {
+                        if (!ex.Message.Contains("already exists"))
+                        {
                             throw;
                         }
-                    }    
+                    }
                 }
             }
         }

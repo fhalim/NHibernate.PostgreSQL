@@ -1,5 +1,6 @@
 ﻿namespace NServiceBus.PostgreSQL.Tests
 {
+    using NServiceBus.Saga;
     using Saga;
 
     class FakeSagaData:ContainSagaData

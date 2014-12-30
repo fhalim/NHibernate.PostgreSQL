@@ -1,9 +1,9 @@
 ﻿namespace NServiceBus.PostgreSQL.Tests
 {
     using System;
-    using System.Data.Common;
     using Dapper;
     using Npgsql;
+    using Saga;
     using Xunit;
 
     public class SagaPersisterTests
@@ -50,7 +50,7 @@
 
         private SagaPersister GetPersister()
         {
-            SagaPersister.Initialize(_connectionFactoryHolder.ConnectionFactory, new[]{typeof(FakeSagaData)});
+            SagaPersister.Initialize(_connectionFactoryHolder.ConnectionFactory, new[] {typeof (FakeSagaData)});
             var persister = new SagaPersister(_connectionFactoryHolder);
             return persister;
         }
@@ -97,9 +97,29 @@
         {
             var persister = GetPersister();
             var id = Guid.NewGuid();
-            persister.Save(new FakeSagaData { CorrelationId = 123, MyOtherId = 12, Message = "Hello world", Id = Guid.NewGuid() });
-            persister.Save(new FakeSagaData { CorrelationId = 123, MyOtherId = 13, Message = "Hello world", Id = Guid.NewGuid() });
-            Assert.Throws<NpgsqlException>(() => persister.Save(new FakeSagaData { CorrelationId = 123, MyOtherId = 13, Message = "Hello world 2", Id = Guid.NewGuid() }));
+            persister.Save(new FakeSagaData
+            {
+                CorrelationId = 123,
+                MyOtherId = 12,
+                Message = "Hello world",
+                Id = Guid.NewGuid()
+            });
+            persister.Save(new FakeSagaData
+            {
+                CorrelationId = 123,
+                MyOtherId = 13,
+                Message = "Hello world",
+                Id = Guid.NewGuid()
+            });
+            Assert.Throws<NpgsqlException>(
+                () =>
+                    persister.Save(new FakeSagaData
+                    {
+                        CorrelationId = 123,
+                        MyOtherId = 13,
+                        Message = "Hello world 2",
+                        Id = Guid.NewGuid()
+                    }));
         }
 
         [Fact]

@@ -1,11 +1,10 @@
-﻿namespace NServiceBus.PostgreSQL
+﻿namespace NServiceBus.PostgreSQL.Saga
 {
     using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.Linq;
     using Features;
-    using Saga;
+    using NServiceBus.Saga;
     using Settings;
 
     public class PostgreSQLSagaStorage : Feature
@@ -24,8 +23,10 @@
 
         private static List<Type> GetSagaTypes(ReadOnlySettings settings)
         {
-
-            var sagaDataTypes = settings.GetAvailableTypes().Where(t => typeof(IContainSagaData).IsAssignableFrom(t) && !t.IsInterface).ToList();
+            var sagaDataTypes =
+                settings.GetAvailableTypes()
+                    .Where(t => typeof (IContainSagaData).IsAssignableFrom(t) && !t.IsInterface)
+                    .ToList();
             return sagaDataTypes;
         }
     }

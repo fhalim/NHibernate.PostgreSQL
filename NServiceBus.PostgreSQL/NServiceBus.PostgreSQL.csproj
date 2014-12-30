@@ -53,12 +53,12 @@
     <Compile Include="DeduplicationPersister.cs" />
     <Compile Include="PostgreSQLGatewayDeduplication.cs" />
     <Compile Include="PostgreSQLPersistence.cs" />
-    <Compile Include="PostgreSQLSagaStorage.cs" />
+    <Compile Include="Saga\PostgreSQLSagaStorage.cs" />
     <Compile Include="PostgreSQLStorageSession.cs" />
-    <Compile Include="PostgreSQLTimeoutStorage.cs" />
+    <Compile Include="Timeout\PostgreSQLTimeoutStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SagaPersister.cs" />
-    <Compile Include="TimeoutPersister.cs" />
+    <Compile Include="Saga\SagaPersister.cs" />
+    <Compile Include="Timeout\TimeoutPersister.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
