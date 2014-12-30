@@ -28,6 +28,9 @@
         [Unique]
         public virtual int CorrelationId { get; set; }
 
+        [Unique]
+        public virtual int MyOtherId { get; set; }
+
         // all other properties you want persisted
         public virtual string Message { get; set; }
     }

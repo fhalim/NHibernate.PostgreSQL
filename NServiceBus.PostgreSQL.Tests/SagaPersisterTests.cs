@@ -1,6 +1,7 @@
 ﻿namespace NServiceBus.PostgreSQL.Tests
 {
     using System;
+    using System.Data.Common;
     using Dapper;
     using Npgsql;
     using Xunit;
@@ -49,7 +50,7 @@
 
         private SagaPersister GetPersister()
         {
-            SagaPersister.Initialize(_connectionFactoryHolder.ConnectionFactory);
+            SagaPersister.Initialize(_connectionFactoryHolder.ConnectionFactory, new[]{typeof(FakeSagaData)});
             var persister = new SagaPersister(_connectionFactoryHolder);
             return persister;
         }
@@ -89,6 +90,16 @@
 
             var fakeSagaDataByCorrelationId = persister.Get<FakeSagaData>("CorrelationId", 123);
             Assert.Equal(originalSagaData, fakeSagaDataByCorrelationId);
+        }
+
+        [Fact]
+        public void Persisting_saga_datas_with_conflicting_unique_values_should_throw()
+        {
+            var persister = GetPersister();
+            var id = Guid.NewGuid();
+            persister.Save(new FakeSagaData { CorrelationId = 123, MyOtherId = 12, Message = "Hello world", Id = Guid.NewGuid() });
+            persister.Save(new FakeSagaData { CorrelationId = 123, MyOtherId = 13, Message = "Hello world", Id = Guid.NewGuid() });
+            Assert.Throws<NpgsqlException>(() => persister.Save(new FakeSagaData { CorrelationId = 123, MyOtherId = 13, Message = "Hello world 2", Id = Guid.NewGuid() }));
         }
 
         [Fact]
