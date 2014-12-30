@@ -2,10 +2,20 @@ namespace NServiceBus.PostgreSQL
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using Timeout.Core;
 
-    public class TimeoutPersister:IPersistTimeouts
+    public class TimeoutPersister : IPersistTimeouts
     {
+        private Func<IDbConnection> _connectionFactory;
+        private Func<Type, string> _typeMapper;
+
+        public TimeoutPersister(ConnectionFactoryHolder connectionFactoryHolder)
+        {
+            _connectionFactory = connectionFactoryHolder.ConnectionFactory;
+            _typeMapper = t => t.FullName;
+        }
+
         public IEnumerable<Tuple<string, DateTime>> GetNextChunk(DateTime startSlice, out DateTime nextTimeToRunQuery)
         {
             nextTimeToRunQuery = DateTime.MaxValue;
@@ -24,6 +34,11 @@ namespace NServiceBus.PostgreSQL
 
         public void RemoveTimeoutBy(Guid sagaId)
         {
+        }
+
+        public static void Initialize(IDbConnection conn)
+        {
+            
         }
     }
 }

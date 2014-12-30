@@ -12,11 +12,10 @@
         private readonly Func<IDbConnection> _connectionFactory;
         private readonly Func<Type, string> _typeMapper;
 
-        public SagaPersister(Func<IDbConnection> connectionFactory)
+        public SagaPersister(ConnectionFactoryHolder connectionFactoryHolder)
         {
-            _connectionFactory = connectionFactory;
+            _connectionFactory = connectionFactoryHolder.ConnectionFactory;
             _typeMapper = t => t.FullName;
-            InitializePersistence();
         }
 
         public void Save(IContainSagaData saga)
@@ -56,15 +55,17 @@
 
         public TSagaData Get<TSagaData>(string propertyName, object propertyValue) where TSagaData : IContainSagaData
         {
-            using (var conn = _connectionFactory()) {
+            using (var conn = _connectionFactory())
+            {
                 var p = new DynamicParameters();
                 var search = "{" + JsonConvert.SerializeObject(propertyName) + ": " +
                              JsonConvert.SerializeObject(propertyValue) + "}";
                 Console.WriteLine(search);
-                p.Add(":type", dbType: DbType.String, value: _typeMapper(typeof(TSagaData)));
+                p.Add(":type", dbType: DbType.String, value: _typeMapper(typeof (TSagaData)));
                 p.Add(":jsonString", dbType: DbType.String, value: search);
                 var data =
-                    conn.Query<string>("SELECT sagadata FROM sagas WHERE type = :type AND sagadata @> :jsonString", p).FirstOrDefault();
+                    conn.Query<string>("SELECT sagadata FROM sagas WHERE type = :type AND sagadata @> :jsonString", p)
+                        .FirstOrDefault();
                 return data == default(string) ? default(TSagaData) : JsonConvert.DeserializeObject<TSagaData>(data);
             }
         }
@@ -89,13 +90,23 @@
             return p;
         }
 
-        private void InitializePersistence()
+        public static void Initialize(Func<IDbConnection> connectionFactory)
         {
-            using (var conn = _connectionFactory())
+            using (var conn = connectionFactory())
             {
                 conn.Execute(
                     "CREATE TABLE IF NOT EXISTS sagas(type TEXT, id UUID, originalmessageid TEXT, originator TEXT, sagadata JSONB, PRIMARY KEY (type, id))");
-                conn.Execute("CREATE INDEX idx_sagas_json ON sagas USING gin (sagadata jsonb_path_ops);");
+                try
+                {
+                    conn.Execute("CREATE INDEX idx_sagas_json ON sagas USING gin (sagadata jsonb_path_ops);");
+                }
+                catch (Exception ex)
+                {
+                    if (!ex.Message.Contains("already exists"))
+                    {
+                        throw;
+                    }
+                }
             }
         }
     }

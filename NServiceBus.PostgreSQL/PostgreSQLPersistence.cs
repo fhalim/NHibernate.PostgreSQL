@@ -13,8 +13,6 @@
             Defaults(s =>
             {
                 s.EnableFeatureByDefault<PostgreSQLStorageSession>();
-                /*          s.EnableFeatureByDefault<RavenDbStorageSession>();
-                s.EnableFeatureByDefault<SharedDocumentStore>();*/
             });
 
             Supports(Storage.GatewayDeduplication, s => s.EnableFeatureByDefault<PostgreSQLGatewayDeduplication>());
