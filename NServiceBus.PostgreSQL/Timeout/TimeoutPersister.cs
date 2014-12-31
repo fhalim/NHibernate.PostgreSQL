@@ -98,24 +98,10 @@ namespace NServiceBus.PostgreSQL.Timeout
         {
             using (var conn = connFactory())
             {
-                Action<string> runIdxCreationScripts = q =>
-                {
-                    try
-                    {
-                        conn.Execute(q);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (!ex.Message.Contains("already exists"))
-                        {
-                            throw;
-                        }
-                    }
-                };
                 conn.Execute(
                     "CREATE TABLE IF NOT EXISTS timeouts(id TEXT, destination TEXT, sagaid UUID, state BYTEA, time TIMESTAMP WITHOUT TIME ZONE, headers JSONB, endpointname TEXT, PRIMARY KEY (id))");
-                runIdxCreationScripts("CREATE INDEX idx_timeouts_sagaid ON timeouts (sagaid)");
-                runIdxCreationScripts("CREATE INDEX idx_timeouts_time ON timeouts (endpointname, time)");
+                conn.Execute("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'idx_timeouts_sagaid' AND n.nspname = CURRENT_SCHEMA()) THEN CREATE INDEX idx_timeouts_sagaid ON timeouts (sagaid); END IF;END $$");
+                conn.Execute("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'idx_timeouts_time' AND n.nspname = CURRENT_SCHEMA()) THEN CREATE INDEX idx_timeouts_time ON timeouts (endpointname, time); END IF;END $$");
             }
         }
     }

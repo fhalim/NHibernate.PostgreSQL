@@ -97,17 +97,7 @@
             {
                 conn.Execute(
                     "CREATE TABLE IF NOT EXISTS sagas(type TEXT, id UUID, originalmessageid TEXT, originator TEXT, sagadata JSONB, PRIMARY KEY (type, id))");
-                try
-                {
-                    conn.Execute("CREATE INDEX idx_sagas_json ON sagas USING gin (sagadata jsonb_path_ops);");
-                }
-                catch (Exception ex)
-                {
-                    if (!ex.Message.Contains("already exists"))
-                    {
-                        throw;
-                    }
-                }
+                conn.Execute("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'idx_sagas_json' AND n.nspname = CURRENT_SCHEMA()) THEN CREATE INDEX idx_sagas_json ON sagas USING gin (sagadata jsonb_path_ops); END IF;END $$");
 
                 foreach (var sagaType in sagaTypes.Where(t => UniqueAttribute.GetUniqueProperties(t).Any()))
                 {
