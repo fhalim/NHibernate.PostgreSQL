@@ -73,7 +73,6 @@ namespace NServiceBus.PostgreSQL.Outbox
                    };
                 conn.Execute(
                     "CREATE TABLE IF NOT EXISTS outboxes (id TEXT, dispatched BOOL, dispatchedat TIMESTAMP WITHOUT TIME ZONE, transportoperations JSONB, PRIMARY KEY(id))");
-                runIdxCreationScripts("CREATE INDEX idx_outboxes_transportoperations ON outboxes USING gin (transportoperations jsonb_path_ops);");
                 runIdxCreationScripts("CREATE INDEX idx_outboxes_dispatched ON outboxes (dispatchedat) WHERE dispatched = true;");
             }
         }

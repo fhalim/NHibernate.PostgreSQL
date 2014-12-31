@@ -96,6 +96,7 @@
         private TimeoutPersister GetPersister()
         {
             TimeoutPersister.Initialize(_connFactory);
+            TimeoutPersister.Initialize(_connFactory);
             var persister = new TimeoutPersister(new ConnectionFactoryHolder {ConnectionFactory = _connFactory})
             {
                 EndpointName = "MyTestEndpoint"

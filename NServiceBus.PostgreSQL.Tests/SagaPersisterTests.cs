@@ -51,6 +51,7 @@
         private SagaPersister GetPersister()
         {
             SagaPersister.Initialize(_connectionFactoryHolder.ConnectionFactory, new[] {typeof (FakeSagaData)});
+            SagaPersister.Initialize(_connectionFactoryHolder.ConnectionFactory, new[] {typeof (FakeSagaData)});
             var persister = new SagaPersister(_connectionFactoryHolder);
             return persister;
         }

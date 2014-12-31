@@ -88,6 +88,7 @@
         private OutboxPersister GetPersister()
         {
             OutboxPersister.Initialize(_connectionFactoryHolder.ConnectionFactory);
+            OutboxPersister.Initialize(_connectionFactoryHolder.ConnectionFactory);
             var persister = new OutboxPersister(_connectionFactoryHolder);
             return persister;
         }
