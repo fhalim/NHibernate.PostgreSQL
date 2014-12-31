@@ -1,6 +1,7 @@
 ﻿namespace NServiceBus.PostgreSQL.Tests
 {
     using System;
+    using System.Configuration;
     using Dapper;
     using Npgsql;
     using Saga;
@@ -12,8 +13,7 @@
 
         public SagaPersisterTests()
         {
-            const string connstring =
-                "Server=127.0.0.1;Port=5432;User Id=NServiceBus.PostgreSQL.Tests;Password=password;Database=dev;";
+            var connstring = ConfigurationManager.AppSettings["testpgsqlconnstring"];
             _connectionFactoryHolder = new ConnectionFactoryHolder
             {
                 ConnectionFactory = () => new NpgsqlConnection(connstring)

@@ -1,7 +1,10 @@
 ﻿namespace NServiceBus.PostgreSQL.Tests
 {
     using System;
+    using System.Collections.Generic;
+    using System.Configuration;
     using System.Data;
+    using System.Linq;
     using Dapper;
     using Npgsql;
     using NServiceBus.Timeout.Core;
@@ -14,8 +17,7 @@
 
         public TimeoutPersisterTests()
         {
-            const string connstring =
-                "Server=127.0.0.1;Port=5432;User Id=NServiceBus.PostgreSQL.Tests;Password=password;Database=dev;";
+            var connstring = ConfigurationManager.AppSettings["testpgsqlconnstring"];
             _connFactory = () => new NpgsqlConnection(connstring);
             using (var conn = _connFactory())
             {
@@ -46,11 +48,58 @@
             }
         }
 
+        [Fact]
+        public void Should_be_able_to_query_timeout_in_future()
+        {
+            var persister = GetPersister();
+            var time = DateTime.UtcNow;
+            DateTime nextTimeToRun;
+            var h = new Dictionary<string, string> {{"foo", "bar"}};
+            persister.Add(new TimeoutData {Time = time, Headers = h});
+            var chunk = persister.GetNextChunk(DateTime.UtcNow.AddMinutes(-1), out nextTimeToRun);
+            Assert.Equal(1, chunk.Count());
+            Assert.InRange(chunk.First().Item2, time.AddTicks(-10), time.AddTicks(10));
+        }
+
+        [Fact]
+        public void Should_honor_time_of_next_Item()
+        {
+            var persister = GetPersister();
+            var time = DateTime.UtcNow;
+            var nextTime = DateTime.UtcNow.AddDays(1);
+            DateTime nextTimeToRun;
+            var h = new Dictionary<string, string> {{"foo", "bar"}};
+            persister.Add(new TimeoutData {Time = time, Headers = h});
+            persister.Add(new TimeoutData {Time = nextTime, Headers = h});
+            persister.GetNextChunk(DateTime.UtcNow.AddMinutes(-1), out nextTimeToRun);
+            Assert.InRange(nextTimeToRun, nextTime.AddTicks(-10), nextTime.AddTicks(10));
+        }
+
+        [Fact]
+        public void Should_be_able_to_pop_entries_off()
+        {
+            var persister = GetPersister();
+            var time = DateTime.UtcNow;
+            DateTime nextTimeToRun;
+            var h = new Dictionary<string, string> {{"foo", "bar"}};
+            persister.Add(new TimeoutData {Time = time, Headers = h});
+            var chunk = persister.GetNextChunk(DateTime.UtcNow.AddMinutes(-1), out nextTimeToRun);
+            Assert.Equal(1, chunk.Count());
+            TimeoutData timeoutData;
+            var entry = persister.TryRemove(chunk.First().Item1, out timeoutData);
+            Assert.NotNull(timeoutData);
+            Assert.Equal(h, timeoutData.Headers);
+            var chunk2 = persister.GetNextChunk(DateTime.UtcNow.AddMinutes(-1), out nextTimeToRun);
+            Assert.Equal(0, chunk2.Count());
+        }
 
         private TimeoutPersister GetPersister()
         {
             TimeoutPersister.Initialize(_connFactory);
-            var persister = new TimeoutPersister(new ConnectionFactoryHolder {ConnectionFactory = _connFactory});
+            var persister = new TimeoutPersister(new ConnectionFactoryHolder {ConnectionFactory = _connFactory})
+            {
+                EndpointName = "MyTestEndpoint"
+            };
             return persister;
         }
     }

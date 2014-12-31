@@ -3,50 +3,91 @@ namespace NServiceBus.PostgreSQL.Timeout
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Linq;
     using Dapper;
+    using Newtonsoft.Json;
     using NServiceBus.Timeout.Core;
 
     public class TimeoutPersister : IPersistTimeouts
     {
         private readonly Func<IDbConnection> _connectionFactory;
-        private Func<Type, string> _typeMapper;
 
         public TimeoutPersister(ConnectionFactoryHolder connectionFactoryHolder)
         {
             _connectionFactory = connectionFactoryHolder.ConnectionFactory;
-            _typeMapper = t => t.FullName;
         }
+
+        public string EndpointName { get; set; }
 
         public IEnumerable<Tuple<string, DateTime>> GetNextChunk(DateTime startSlice, out DateTime nextTimeToRunQuery)
         {
-            nextTimeToRunQuery = DateTime.MaxValue;
-            return new Tuple<string, DateTime>[] {};
+            using (var conn = _connectionFactory())
+            {
+                var param = new {endpointname = EndpointName, starttime = startSlice, endtime = DateTime.UtcNow};
+                var res = conn.Query(
+                    "SELECT id, time FROM timeouts WHERE endpointname = :endpointname AND time BETWEEN :starttime AND :endtime",
+                    param)
+                    .Select(r => Tuple.Create((string) r.id, (DateTime) r.time));
+                var startOfNextChunk = conn.Query<DateTime>(
+                    "SELECT time FROM timeouts WHERE endpointname = :endpointname AND time > :endtime ORDER BY TIME ASC LIMIT 1",
+                    param).ToArray();
+                if (startOfNextChunk.Any())
+                {
+                    nextTimeToRunQuery = startOfNextChunk.First();
+                }
+                else
+                {
+                    nextTimeToRunQuery = DateTime.UtcNow.AddMinutes(10);
+                }
+                return res;
+            }
         }
 
         public void Add(TimeoutData timeout)
         {
+            var id = Guid.NewGuid().ToString();
             using (var conn = _connectionFactory())
             {
-                var timeoutInfo = new
+                var timeoutInfo = new DynamicParameters(new
                 {
-                    timeout.Id,
+                    id,
                     Destination = timeout.Destination != null ? timeout.Destination.ToString() : null,
                     timeout.SagaId,
                     timeout.State,
                     timeout.Time,
-                    timeout.Headers,
-                    timeout.OwningTimeoutManager
-                };
+                    EndpointName
+                });
+                timeoutInfo.Add("Headers", JsonConvert.SerializeObject(timeout.Headers));
                 conn.Execute(
-                    "INSERT INTO timeouts (id, destination, sagaid, state, time, headers, owningtimeoutmanager) VALUES (:Id, :Destination, :SagaId, :State, :Time, :Headers, :OwningTimeoutManager)",
+                    "INSERT INTO timeouts (id, destination, sagaid, state, time, headers, endpointname) VALUES (:Id, :Destination, :SagaId, :State, :Time, :Headers, :EndpointName)",
                     timeoutInfo);
+                timeout.Id = id;
             }
         }
 
         public bool TryRemove(string timeoutId, out TimeoutData timeoutData)
         {
-            timeoutData = null;
-            return false;
+            using (var conn = _connectionFactory())
+            {
+                timeoutData =
+                    conn.Query(
+                        "SELECT id, destination, sagaid, state, time, headers, endpointname FROM timeouts WHERE id = :id",
+                        new {id = timeoutId})
+                        .Select(
+                            i =>
+                                new TimeoutData
+                                {
+                                    Id = i.id,
+                                    Destination = i.destination != null ? Address.Parse(i.destination) : null,
+                                    SagaId = i.sagaid,
+                                    State = i.state,
+                                    Headers = JsonConvert.DeserializeObject<Dictionary<string, string>>(i.headers),
+                                    OwningTimeoutManager = i.endpointname
+                                }).FirstOrDefault();
+                var result = timeoutData != default(TimeoutData);
+                conn.Execute("DELETE FROM timeouts WHERE id = :id", new {id = timeoutId});
+                return result;
+            }
         }
 
         public void RemoveTimeoutBy(Guid sagaId)
@@ -57,8 +98,24 @@ namespace NServiceBus.PostgreSQL.Timeout
         {
             using (var conn = connFactory())
             {
+                Action<string> runIdxCreationScripts = q =>
+                {
+                    try
+                    {
+                        conn.Execute(q);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (!ex.Message.Contains("already exists"))
+                        {
+                            throw;
+                        }
+                    }
+                };
                 conn.Execute(
-                    "CREATE TABLE IF NOT EXISTS timeouts(id TEXT, destination TEXT, sagaid UUID, state BYTEA, time TIMESTAMP WITH TIME ZONE, headers TEXT, owningtimeoutmanager TEXT, PRIMARY KEY (id))");
+                    "CREATE TABLE IF NOT EXISTS timeouts(id TEXT, destination TEXT, sagaid UUID, state BYTEA, time TIMESTAMP WITHOUT TIME ZONE, headers JSONB, endpointname TEXT, PRIMARY KEY (id))");
+                runIdxCreationScripts("CREATE INDEX idx_timeouts_sagaid ON timeouts (sagaid)");
+                runIdxCreationScripts("CREATE INDEX idx_timeouts_time ON timeouts (endpointname, time)");
             }
         }
     }
