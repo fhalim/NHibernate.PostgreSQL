@@ -112,7 +112,6 @@
                         typeCollapsedName, jsonFieldsExpression, typeName
                         );
                     // Create Unique constraint for type
-                    Console.WriteLine(indexCreationStatement);
                     conn.Execute(indexCreationStatement);
                 }
             }
