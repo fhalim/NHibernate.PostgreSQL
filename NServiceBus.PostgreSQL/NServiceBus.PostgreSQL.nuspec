@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>NServiceBus.PostgreSQL</id>
+    <version>$version$</version>
+    <title>NServiceBus.PostgreSQL</title>
+    <authors>Fawad Halim</authors>
+    <owners>Fawad Halim</owners>
+    <licenseUrl>https://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>https://github.com/fhalim/NServiceBus.PostgreSQL</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>PostgreSQL JSONB backend for NServiceBus persistence</description>
+    <releaseNotes>Initial Release</releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>NServiceBus Messaging PostgreSQL Persistence</tags>
+  </metadata>
+</package>
