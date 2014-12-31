@@ -97,31 +97,23 @@
             {
                 conn.Execute(
                     "CREATE TABLE IF NOT EXISTS sagas(type TEXT, id UUID, originalmessageid TEXT, originator TEXT, sagadata JSONB, PRIMARY KEY (type, id))");
-                conn.Execute("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'idx_sagas_json' AND n.nspname = CURRENT_SCHEMA()) THEN CREATE INDEX idx_sagas_json ON sagas USING gin (sagadata jsonb_path_ops); END IF;END $$");
+                conn.Execute(
+                    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'idx_sagas_json' AND n.nspname = CURRENT_SCHEMA()) THEN CREATE INDEX idx_sagas_json ON sagas USING gin (sagadata jsonb_path_ops); END IF;END $$");
 
                 foreach (var sagaType in sagaTypes.Where(t => UniqueAttribute.GetUniqueProperties(t).Any()))
                 {
                     var typeName = TypeMapper(sagaType);
-                    var typeCollapsedName = typeName.Replace('.', '_');
+                    var typeCollapsedName = typeName.Replace('.', '_').ToLower();
 
                     var jsonFieldsExpression = String.Join(", ", UniqueAttribute.GetUniqueProperties(sagaType)
                         .Select(f => String.Format("(sagadata -> '{0}')", f.Name)));
                     var indexCreationStatement = String.Format(
-                        "CREATE UNIQUE INDEX CONCURRENTLY idx_sagas_json_{0} ON sagas({1}) WHERE type = '{2}'",
+                        "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'idx_sagas_json_{0}' AND n.nspname = CURRENT_SCHEMA()) THEN CREATE UNIQUE INDEX idx_sagas_json_{0} ON sagas({1}) WHERE type = '{2}'; END IF;END $$",
                         typeCollapsedName, jsonFieldsExpression, typeName
                         );
                     // Create Unique constraint for type
-                    try
-                    {
-                        conn.Execute(indexCreationStatement);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (!ex.Message.Contains("already exists"))
-                        {
-                            throw;
-                        }
-                    }
+                    Console.WriteLine(indexCreationStatement);
+                    conn.Execute(indexCreationStatement);
                 }
             }
         }
