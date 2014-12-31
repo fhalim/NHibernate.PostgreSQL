@@ -80,11 +80,13 @@
 
         private static DynamicParameters GetUpdateParameters(IContainSagaData saga)
         {
-            var p = new DynamicParameters();
-            p.Add(":type", dbType: DbType.String, value: TypeMapper(saga.GetType()));
-            p.Add(":id", dbType: DbType.Guid, value: saga.Id);
-            p.Add(":originalmessageid", dbType: DbType.String, value: saga.OriginalMessageId);
-            p.Add(":originator", dbType: DbType.String, value: saga.Originator);
+            var p = new DynamicParameters(new
+            {
+                type = TypeMapper(saga.GetType()),
+                id = saga.Id,
+                originalmessageid = saga.OriginalMessageId,
+                originator = saga.Originator
+            });
             p.Add(":sagadata", dbType: DbType.String, value: JsonConvert.SerializeObject(saga));
             return p;
         }

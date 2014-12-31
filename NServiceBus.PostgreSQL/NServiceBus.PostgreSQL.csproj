@@ -51,7 +51,9 @@
   <ItemGroup>
     <Compile Include="ConnectionFactoryHolder.cs" />
     <Compile Include="DeduplicationPersister.cs" />
+    <Compile Include="Outbox\OutboxPersister.cs" />
     <Compile Include="PostgreSQLGatewayDeduplication.cs" />
+    <Compile Include="Outbox\PostgreSQLOutboxStorage.cs" />
     <Compile Include="PostgreSQLPersistence.cs" />
     <Compile Include="Saga\PostgreSQLSagaStorage.cs" />
     <Compile Include="PostgreSQLStorageSession.cs" />
