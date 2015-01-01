@@ -64,8 +64,8 @@ namespace NServiceBus.PostgreSQL.Outbox
             using (var conn = connectionFactory()) {
                 conn.Execute(
                     "CREATE TABLE IF NOT EXISTS outboxes (id TEXT, dispatched BOOL, dispatchedat TIMESTAMP WITHOUT TIME ZONE, transportoperations JSONB, PRIMARY KEY(id))");
-                conn.Execute(
-                    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'idx_outboxes_dispatched' AND n.nspname = CURRENT_SCHEMA()) THEN CREATE INDEX idx_outboxes_dispatched ON outboxes (dispatchedat) WHERE dispatched = true; END IF;END $$");
+                conn.CreateIndexIfNotExists(
+                    "CREATE INDEX idx_outboxes_dispatched ON outboxes (dispatchedat) WHERE dispatched = true", "idx_outboxes_dispatched");
             }
         }
 

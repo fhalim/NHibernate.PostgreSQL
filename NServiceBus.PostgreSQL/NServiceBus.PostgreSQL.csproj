@@ -50,9 +50,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConnectionFactoryHolder.cs" />
-    <Compile Include="DeduplicationPersister.cs" />
+    <Compile Include="DbExtensions.cs" />
     <Compile Include="Outbox\OutboxPersister.cs" />
-    <Compile Include="PostgreSQLGatewayDeduplication.cs" />
     <Compile Include="Outbox\PostgreSQLOutboxStorage.cs" />
     <Compile Include="PostgreSQLPersistence.cs" />
     <Compile Include="Saga\PostgreSQLSagaStorage.cs" />

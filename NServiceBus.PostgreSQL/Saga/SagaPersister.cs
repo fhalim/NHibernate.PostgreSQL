@@ -97,8 +97,8 @@
             {
                 conn.Execute(
                     "CREATE TABLE IF NOT EXISTS sagas(type TEXT, id UUID, originalmessageid TEXT, originator TEXT, sagadata JSONB, PRIMARY KEY (type, id))");
-                conn.Execute(
-                    "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'idx_sagas_json' AND n.nspname = CURRENT_SCHEMA()) THEN CREATE INDEX idx_sagas_json ON sagas USING gin (sagadata jsonb_path_ops); END IF;END $$");
+                conn.CreateIndexIfNotExists("CREATE INDEX idx_sagas_json ON sagas USING gin (sagadata jsonb_path_ops)",
+                    "idx_sagas_json");
 
                 foreach (var sagaType in sagaTypes.Where(t => UniqueAttribute.GetUniqueProperties(t).Any()))
                 {
@@ -107,12 +107,12 @@
 
                     var jsonFieldsExpression = String.Join(", ", UniqueAttribute.GetUniqueProperties(sagaType)
                         .Select(f => String.Format("(sagadata -> '{0}')", f.Name)));
-                    var indexCreationStatement = String.Format(
-                        "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'idx_sagas_json_{0}' AND n.nspname = CURRENT_SCHEMA()) THEN CREATE UNIQUE INDEX idx_sagas_json_{0} ON sagas({1}) WHERE type = '{2}'; END IF;END $$",
-                        typeCollapsedName, jsonFieldsExpression, typeName
+                    var indexName = String.Format("idx_sagas_json_{0}", typeCollapsedName);
+                    var indexCreationStatement = String.Format("CREATE UNIQUE INDEX {0} ON sagas({1}) WHERE type = '{2}'",
+                        indexName, jsonFieldsExpression, typeName
                         );
                     // Create Unique constraint for type
-                    conn.Execute(indexCreationStatement);
+                    conn.CreateIndexIfNotExists(indexCreationStatement, indexName);
                 }
             }
         }

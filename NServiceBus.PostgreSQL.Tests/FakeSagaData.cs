@@ -1,7 +1,16 @@
 ﻿namespace NServiceBus.PostgreSQL.Tests
 {
+    using System;
     using NServiceBus.Saga;
-    using Saga;
+
+    class BiggerSagaData : ContainSagaData
+    {
+        [Unique] public string MyId { get; set; }
+
+        public int MyInteger { get; set; }
+        public Guid MyGuid { get; set; }
+        public DateTime MyDateTime { get; set; }
+    }
 
     class FakeSagaData:ContainSagaData
     {

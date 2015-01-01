@@ -1,8 +1,11 @@
 ﻿namespace NServiceBus.PostgreSQL.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.Configuration;
+    using System.Diagnostics;
     using Dapper;
+    using HdrHistogram.NET;
     using Npgsql;
     using Saga;
     using Xunit;
@@ -50,8 +53,8 @@
 
         private SagaPersister GetPersister()
         {
-            SagaPersister.Initialize(_connectionFactoryHolder.ConnectionFactory, new[] {typeof (FakeSagaData)});
-            SagaPersister.Initialize(_connectionFactoryHolder.ConnectionFactory, new[] {typeof (FakeSagaData)});
+            SagaPersister.Initialize(_connectionFactoryHolder.ConnectionFactory, new[] {typeof (FakeSagaData), typeof(BiggerSagaData)});
+            SagaPersister.Initialize(_connectionFactoryHolder.ConnectionFactory, new[] { typeof(FakeSagaData), typeof(BiggerSagaData) });
             var persister = new SagaPersister(_connectionFactoryHolder);
             return persister;
         }
@@ -133,6 +136,40 @@
             persister.Update(updatedSagaData);
             var fakeSagaData = persister.Get<FakeSagaData>(id);
             Assert.Equal(updatedSagaData, fakeSagaData);
+        }
+
+        [Fact(Skip = "Benchmark")]
+        public void Benchmark_writes()
+        {
+            var persister = GetPersister();
+            var count = 1000;
+            var ids = new List<Guid>(count);
+            BenchmarkOperation(count, x=>
+            {
+                var id = Guid.NewGuid();
+                persister.Save(new FakeSagaData {Id = id, MyOtherId = x, Message = "Message" + x});
+                ids.Add(id);
+            }, messagePrefix:"Saving_FakeSagaData");
+            BenchmarkOperation(count, x=>persister.Save(new BiggerSagaData {Id=Guid.NewGuid(), MyId = Guid.NewGuid().ToString(), MyDateTime = DateTime.UtcNow, MyInteger = x}), messagePrefix:"Saving_BiggerSagaData");
+            BenchmarkOperation(count, x=>persister.Get<FakeSagaData>(ids[x]), messagePrefix:"Query_FakeSagaData_ById");
+            BenchmarkOperation(count, x=>persister.Get<BiggerSagaData>("MyInteger", x), messagePrefix:"Query_BiggerSagaData_ByArbitraryField_Existing");
+            BenchmarkOperation(count, x=>persister.Get<BiggerSagaData>("MyInteger", Int32.MaxValue - x), messagePrefix:"Query_BiggerSagaData_ByArbitraryField_NonExistant");
+            BenchmarkOperation(count, x=>persister.Complete(new FakeSagaData{Id = ids[x], MyOtherId = x, Message = "Message" + x}), messagePrefix:"Complete_FakeSagaData");
+        }
+
+        private static Histogram BenchmarkOperation(int iterations, Action<int> action, string messagePrefix = "")
+        {
+            var min = TimeSpan.MaxValue;
+            var max = TimeSpan.MinValue;
+            var hist = new Histogram(50000000, 5);
+            for (var x = 0; x < iterations; x++) {
+                var sw = Stopwatch.StartNew();
+                action(x);
+                sw.Stop();
+                hist.recordValue(sw.ElapsedTicks / 10);
+            }
+            Console.WriteLine("{0} Min: {1}us, Max: {2}us, 95%: {3}us, 99%: {4}us", messagePrefix, hist.getMinValue(), hist.getMaxValue(), hist.getValueAtPercentile(95), hist.getValueAtPercentile(99));
+            return hist;
         }
     }
 }

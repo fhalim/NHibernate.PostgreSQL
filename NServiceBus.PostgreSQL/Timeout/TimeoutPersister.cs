@@ -100,8 +100,8 @@ namespace NServiceBus.PostgreSQL.Timeout
             {
                 conn.Execute(
                     "CREATE TABLE IF NOT EXISTS timeouts(id TEXT, destination TEXT, sagaid UUID, state BYTEA, time TIMESTAMP WITHOUT TIME ZONE, headers JSONB, endpointname TEXT, PRIMARY KEY (id))");
-                conn.Execute("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'idx_timeouts_sagaid' AND n.nspname = CURRENT_SCHEMA()) THEN CREATE INDEX idx_timeouts_sagaid ON timeouts (sagaid); END IF;END $$");
-                conn.Execute("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'idx_timeouts_time' AND n.nspname = CURRENT_SCHEMA()) THEN CREATE INDEX idx_timeouts_time ON timeouts (endpointname, time); END IF;END $$");
+                conn.CreateIndexIfNotExists("CREATE INDEX idx_timeouts_sagaid ON timeouts (sagaid)", "idx_timeouts_sagaid");
+                conn.CreateIndexIfNotExists("CREATE INDEX idx_timeouts_time ON timeouts (endpointname, time)", "idx_timeouts_time");
             }
         }
     }

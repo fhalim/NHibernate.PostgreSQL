@@ -35,6 +35,9 @@
     <Reference Include="Dapper">
       <HintPath>..\packages\Dapper.1.38\lib\net45\Dapper.dll</HintPath>
     </Reference>
+    <Reference Include="HdrHistogram.NET">
+      <HintPath>\\psf\Home\Documents\work\NServiceBus.PostgreSQL\lib\HdrHistogram.NET.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Mono.Security">
       <HintPath>..\packages\Npgsql.2.2.3\lib\net45\Mono.Security.dll</HintPath>
