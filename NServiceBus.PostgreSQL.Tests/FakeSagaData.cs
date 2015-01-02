@@ -3,7 +3,7 @@
     using System;
     using NServiceBus.Saga;
 
-    class BiggerSagaData : ContainSagaData
+    public class BiggerSagaData : ContainSagaData
     {
         [Unique] public string MyId { get; set; }
 
@@ -12,7 +12,7 @@
         public DateTime MyDateTime { get; set; }
     }
 
-    class FakeSagaData:ContainSagaData
+    public class FakeSagaData:ContainSagaData
     {
         protected bool Equals(FakeSagaData other)
         {
