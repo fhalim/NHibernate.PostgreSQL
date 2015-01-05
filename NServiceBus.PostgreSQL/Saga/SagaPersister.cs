@@ -5,6 +5,7 @@
     using System.Data;
     using System.Linq;
     using Dapper;
+    using MethodTimer;
     using Newtonsoft.Json;
     using NServiceBus.Saga;
 
@@ -18,6 +19,7 @@
             _connectionFactory = connectionFactoryHolder.ConnectionFactory;
         }
 
+        [Time]
         public void Save(IContainSagaData saga)
         {
             using (var conn = _connectionFactory())
@@ -28,7 +30,7 @@
                     p);
             }
         }
-
+        [Time]
         public void Update(IContainSagaData saga)
         {
             using (var conn = _connectionFactory())
@@ -39,7 +41,7 @@
                     p);
             }
         }
-
+        [Time]
         public TSagaData Get<TSagaData>(Guid sagaId) where TSagaData : IContainSagaData
         {
             using (var conn = _connectionFactory())
@@ -52,7 +54,7 @@
                 return data == default(string) ? default(TSagaData) : JsonConvert.DeserializeObject<TSagaData>(data);
             }
         }
-
+        [Time]
         public TSagaData Get<TSagaData>(string propertyName, object propertyValue) where TSagaData : IContainSagaData
         {
             using (var conn = _connectionFactory())
@@ -68,7 +70,7 @@
                 return data == default(string) ? default(TSagaData) : JsonConvert.DeserializeObject<TSagaData>(data);
             }
         }
-
+        [Time]
         public void Complete(IContainSagaData saga)
         {
             using (var conn = _connectionFactory())

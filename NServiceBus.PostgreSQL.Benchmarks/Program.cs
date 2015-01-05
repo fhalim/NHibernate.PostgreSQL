@@ -2,6 +2,8 @@
 {
     using System;
     using System.IO;
+    using System.Threading;
+    using Saga;
 
     internal class Program
     {
@@ -15,6 +17,7 @@
             if (!File.Exists(outfile))
             {
             }
+            new Timer(o => PrintHistograms(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30));
             for(var runIdx = 0; runIdx < 100; runIdx++)
             {
                 using (var stream = File.AppendText(outfile)) {
@@ -28,10 +31,7 @@
                                 timingInfo.Histogram.getMinValue(),
                                 timingInfo.Histogram.getMaxValue(), timingInfo.Histogram.getValueAtPercentile(95),
                                 timingInfo.Histogram.getValueAtPercentile(99));
-                            stream.WriteLine(String.Format("{0},{1},{2},{3},{4},{5},{6}", timingInfo.Name,
-                                timingInfo.StartTime.ToString("o"), timingInfo.Histogram.getMinValue(),
-                                timingInfo.Histogram.getMaxValue(), timingInfo.Histogram.getMean(),
-                                timingInfo.Histogram.getValueAtPercentile(95), timingInfo.Histogram.getValueAtPercentile(99)));
+                            stream.WriteLine("{0},{1},{2},{3},{4},{5},{6}", timingInfo.Name, timingInfo.StartTime.ToString("o"), timingInfo.Histogram.getMinValue(), timingInfo.Histogram.getMaxValue(), timingInfo.Histogram.getMean(), timingInfo.Histogram.getValueAtPercentile(95), timingInfo.Histogram.getValueAtPercentile(99));
                         }
                     }
                 }
@@ -39,6 +39,20 @@
             
             Console.WriteLine("Execution complete. Please press enter to stop");
             Console.ReadLine();
+        }
+
+        private static void PrintHistograms()
+        {
+            foreach (var histogram in MethodTimeLogger.Histograms)
+            {
+                lock (histogram.Value)
+                {
+                    Console.WriteLine("Hist: {0} Min: {1}ms, Max: {2}ms, 95%: {3}ms, 99%: {4}ms, samples: {5}", histogram.Key,
+                        histogram.Value.getMinValue(),
+                        histogram.Value.getMaxValue(), histogram.Value.getValueAtPercentile(95),
+                        histogram.Value.getValueAtPercentile(99), histogram.Value.getTotalCount());
+                }
+            }
         }
     }
 }

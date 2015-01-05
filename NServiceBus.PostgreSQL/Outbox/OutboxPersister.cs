@@ -5,6 +5,7 @@ namespace NServiceBus.PostgreSQL.Outbox
     using System.Data;
     using System.Linq;
     using Dapper;
+    using MethodTimer;
     using Newtonsoft.Json;
     using NServiceBus.Outbox;
 
@@ -17,6 +18,7 @@ namespace NServiceBus.PostgreSQL.Outbox
             _connectionFactory = connectionFactoryHolder.ConnectionFactory;
         }
 
+        [Time]
         public bool TryGet(string messageId, out OutboxMessage message)
         {
             using (var conn = _connectionFactory())
@@ -38,6 +40,7 @@ namespace NServiceBus.PostgreSQL.Outbox
             }
         }
 
+        [Time]
         public void Store(string messageId, IEnumerable<TransportOperation> transportOperations)
         {
             using (var conn = _connectionFactory())
@@ -50,6 +53,7 @@ namespace NServiceBus.PostgreSQL.Outbox
             }
         }
 
+        [Time]
         public void SetAsDispatched(string messageId)
         {
             using (var conn = _connectionFactory())
@@ -61,11 +65,13 @@ namespace NServiceBus.PostgreSQL.Outbox
 
         public static void Initialize(Func<IDbConnection> connectionFactory)
         {
-            using (var conn = connectionFactory()) {
+            using (var conn = connectionFactory())
+            {
                 conn.Execute(
                     "CREATE TABLE IF NOT EXISTS outboxes (id TEXT, dispatched BOOL, dispatchedat TIMESTAMP WITHOUT TIME ZONE, transportoperations JSONB, PRIMARY KEY(id))");
                 conn.CreateIndexIfNotExists(
-                    "CREATE INDEX idx_outboxes_dispatched ON outboxes (dispatchedat) WHERE dispatched = true", "idx_outboxes_dispatched");
+                    "CREATE INDEX idx_outboxes_dispatched ON outboxes (dispatchedat) WHERE dispatched = true",
+                    "idx_outboxes_dispatched");
             }
         }
 

@@ -93,6 +93,21 @@
             Assert.Equal(0, chunk2.Count());
         }
 
+        [Fact]
+        public void Should_be_able_to_remove_timeout_by_saga_id()
+        {
+            var persister = GetPersister();
+            persister.Add(new TimeoutData { Time = DateTime.UtcNow, SagaId = Guid.Empty });
+            using (var conn = _connFactory())
+            {
+                Assert.Equal(1, conn.ExecuteScalar<int>("SELECT COUNT(*) FROM timeouts"));
+            }
+            persister.RemoveTimeoutBy(Guid.Empty);
+            using (var conn = _connFactory()) {
+                Assert.Equal(0, conn.ExecuteScalar<int>("SELECT COUNT(*) FROM timeouts"));
+            }
+        }
+
         private TimeoutPersister GetPersister()
         {
             TimeoutPersister.Initialize(_connFactory);

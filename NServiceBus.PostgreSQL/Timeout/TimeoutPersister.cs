@@ -5,6 +5,7 @@ namespace NServiceBus.PostgreSQL.Timeout
     using System.Data;
     using System.Linq;
     using Dapper;
+    using MethodTimer;
     using Newtonsoft.Json;
     using NServiceBus.Timeout.Core;
 
@@ -19,6 +20,7 @@ namespace NServiceBus.PostgreSQL.Timeout
 
         public string EndpointName { get; set; }
 
+        [Time]
         public IEnumerable<Tuple<string, DateTime>> GetNextChunk(DateTime startSlice, out DateTime nextTimeToRunQuery)
         {
             using (var conn = _connectionFactory())
@@ -43,6 +45,7 @@ namespace NServiceBus.PostgreSQL.Timeout
             }
         }
 
+        [Time]
         public void Add(TimeoutData timeout)
         {
             var id = Guid.NewGuid().ToString();
@@ -65,6 +68,7 @@ namespace NServiceBus.PostgreSQL.Timeout
             }
         }
 
+        [Time]
         public bool TryRemove(string timeoutId, out TimeoutData timeoutData)
         {
             using (var conn = _connectionFactory())
@@ -90,8 +94,13 @@ namespace NServiceBus.PostgreSQL.Timeout
             }
         }
 
+        [Time]
         public void RemoveTimeoutBy(Guid sagaId)
         {
+            using (var conn = _connectionFactory())
+            {
+                conn.Execute("DELETE FROM timeouts WHERE sagaid = :sagaId", new {sagaId});
+            }
         }
 
         public static void Initialize(Func<IDbConnection> connFactory)
@@ -100,8 +109,10 @@ namespace NServiceBus.PostgreSQL.Timeout
             {
                 conn.Execute(
                     "CREATE TABLE IF NOT EXISTS timeouts(id TEXT, destination TEXT, sagaid UUID, state BYTEA, time TIMESTAMP WITHOUT TIME ZONE, headers JSONB, endpointname TEXT, PRIMARY KEY (id))");
-                conn.CreateIndexIfNotExists("CREATE INDEX idx_timeouts_sagaid ON timeouts (sagaid)", "idx_timeouts_sagaid");
-                conn.CreateIndexIfNotExists("CREATE INDEX idx_timeouts_time ON timeouts (endpointname, time)", "idx_timeouts_time");
+                conn.CreateIndexIfNotExists("CREATE INDEX idx_timeouts_sagaid ON timeouts (sagaid)",
+                    "idx_timeouts_sagaid");
+                conn.CreateIndexIfNotExists("CREATE INDEX idx_timeouts_time ON timeouts (endpointname, time)",
+                    "idx_timeouts_time");
             }
         }
     }
