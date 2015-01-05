@@ -37,7 +37,7 @@
       <HintPath>..\packages\Dapper.1.38\lib\net45\Dapper.dll</HintPath>
     </Reference>
     <Reference Include="HdrHistogram.NET">
-      <HintPath>\\psf\Home\Documents\work\NServiceBus.PostgreSQL\lib\HdrHistogram.NET.dll</HintPath>
+      <HintPath>..\lib\HdrHistogram.NET.dll</HintPath>
     </Reference>
     <Reference Include="MethodTimer">
       <HintPath>..\packages\MethodTimer.Fody.1.15.2.0\Lib\portable-net4+sl5+wp8+win8+wpa81+MonoAndroid16+MonoTouch40\MethodTimer.dll</HintPath>
