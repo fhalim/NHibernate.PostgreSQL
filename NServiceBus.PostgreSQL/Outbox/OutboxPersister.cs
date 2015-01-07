@@ -5,12 +5,15 @@ namespace NServiceBus.PostgreSQL.Outbox
     using System.Data;
     using System.Linq;
     using Dapper;
+    using Logging;
     using MethodTimer;
     using Newtonsoft.Json;
     using NServiceBus.Outbox;
+    using Saga;
 
     public class OutboxPersister : IOutboxStorage
     {
+        static readonly ILog Logger = LogManager.GetLogger(typeof(OutboxPersister));
         private readonly Func<IDbConnection> _connectionFactory;
 
         public OutboxPersister(ConnectionFactoryHolder connectionFactoryHolder)
@@ -65,6 +68,7 @@ namespace NServiceBus.PostgreSQL.Outbox
 
         public static void Initialize(Func<IDbConnection> connectionFactory)
         {
+            Logger.Info("Initializing");
             using (var conn = connectionFactory())
             {
                 conn.Execute(

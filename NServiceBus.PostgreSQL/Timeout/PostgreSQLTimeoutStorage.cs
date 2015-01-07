@@ -9,7 +9,6 @@
         {
             var connFactory = PostgreSQLStorageSession.GetConnectionFactory(context.Settings);
             TimeoutPersister.Initialize(connFactory);
-            context.Container.ConfigureComponent<SagaPersister>(DependencyLifecycle.InstancePerCall);
             context.Container.ConfigureComponent<TimeoutPersister>(DependencyLifecycle.InstancePerCall)
                 .ConfigureProperty(p => p.EndpointName, context.Settings.EndpointName());
         }

@@ -5,12 +5,15 @@ namespace NServiceBus.PostgreSQL.Timeout
     using System.Data;
     using System.Linq;
     using Dapper;
+    using Logging;
     using MethodTimer;
     using Newtonsoft.Json;
     using NServiceBus.Timeout.Core;
+    using Saga;
 
     public class TimeoutPersister : IPersistTimeouts
     {
+        static readonly ILog Logger = LogManager.GetLogger(typeof(TimeoutPersister));
         private readonly Func<IDbConnection> _connectionFactory;
 
         public TimeoutPersister(ConnectionFactoryHolder connectionFactoryHolder)
@@ -105,6 +108,7 @@ namespace NServiceBus.PostgreSQL.Timeout
 
         public static void Initialize(Func<IDbConnection> connFactory)
         {
+            Logger.Info("Initializing");
             using (var conn = connFactory())
             {
                 conn.Execute(

@@ -9,8 +9,8 @@
     {
         private static void Main(string[] args)
         {
-            var benchmarks = new IBenchmark[] {new SagaPersisterBenchmark()};
-            var iterations = 10000;
+            var benchmarks = new IBenchmark[] {new SagaPersisterBenchmark(), new OutboxPersisterBenchmark(), };
+            var iterations = 1000;
             Console.WriteLine("Executing benchmarks. Please wait...");
             var outfile = "log.csv";
             var writeheaders = !File.Exists(outfile);
@@ -18,7 +18,7 @@
             {
             }
             new Timer(o => PrintHistograms(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30));
-            for(var runIdx = 0; runIdx < 100; runIdx++)
+            for(var runIdx = 0; runIdx < 10; runIdx++)
             {
                 using (var stream = File.AppendText(outfile)) {
                     if (writeheaders) {

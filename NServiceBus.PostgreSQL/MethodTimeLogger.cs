@@ -1,4 +1,4 @@
-﻿namespace NServiceBus.PostgreSQL.Saga
+﻿namespace NServiceBus.PostgreSQL
 {
     using System.Collections.Concurrent;
     using System.Reflection;

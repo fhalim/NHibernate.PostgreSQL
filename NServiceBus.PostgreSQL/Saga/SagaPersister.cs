@@ -5,12 +5,14 @@
     using System.Data;
     using System.Linq;
     using Dapper;
+    using Logging;
     using MethodTimer;
     using Newtonsoft.Json;
     using NServiceBus.Saga;
 
     public class SagaPersister : ISagaPersister
     {
+        static readonly ILog Logger = LogManager.GetLogger(typeof(SagaPersister));
         private static readonly Func<Type, string> TypeMapper = t => t.FullName;
         private readonly Func<IDbConnection> _connectionFactory;
 
@@ -95,6 +97,7 @@
 
         public static void Initialize(Func<IDbConnection> connectionFactory, IEnumerable<Type> sagaTypes)
         {
+            Logger.Info("Initializing");
             using (var conn = connectionFactory())
             {
                 conn.Execute(

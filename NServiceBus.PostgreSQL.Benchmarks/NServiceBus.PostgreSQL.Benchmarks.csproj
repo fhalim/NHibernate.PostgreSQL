@@ -60,6 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IBenchmark.cs" />
+    <Compile Include="OutboxPersisterBenchmark.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SagaPersisterBenchmark.cs" />

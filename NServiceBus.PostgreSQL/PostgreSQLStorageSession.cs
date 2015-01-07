@@ -1,7 +1,4 @@
-﻿using System;
-using System.Data;
-
-namespace NServiceBus.PostgreSQL
+﻿namespace NServiceBus.PostgreSQL
 {
     using System;
     using System.Configuration;

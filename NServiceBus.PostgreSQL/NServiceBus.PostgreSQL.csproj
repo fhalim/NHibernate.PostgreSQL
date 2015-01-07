@@ -62,7 +62,7 @@
     <Compile Include="Outbox\OutboxPersister.cs" />
     <Compile Include="Outbox\PostgreSQLOutboxStorage.cs" />
     <Compile Include="PostgreSQLPersistence.cs" />
-    <Compile Include="Saga\MethodTimeLogger.cs" />
+    <Compile Include="MethodTimeLogger.cs" />
     <Compile Include="Saga\PostgreSQLSagaStorage.cs" />
     <Compile Include="PostgreSQLStorageSession.cs" />
     <Compile Include="Timeout\PostgreSQLTimeoutStorage.cs" />

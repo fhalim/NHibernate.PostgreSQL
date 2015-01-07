@@ -8,9 +8,9 @@
 
     public class PostgreSQLOutboxStorage:Feature
     {
-        Timer cleanupTimer;
-        private Func<IDbConnection> connectionFactory;
-        private TimeSpan timeToKeepDeduplicationData;
+        Timer _cleanupTimer;
+        private Func<IDbConnection> _connectionFactory;
+        private TimeSpan _timeToKeepDeduplicationData;
         internal PostgreSQLOutboxStorage()
         {
             DependsOn<Outbox>();
@@ -18,12 +18,12 @@
 
         protected override void Setup(FeatureConfigurationContext context)
         {
-            connectionFactory = PostgreSQLStorageSession.GetConnectionFactory(context.Settings);
-            OutboxPersister.Initialize(connectionFactory);
+            _connectionFactory = PostgreSQLStorageSession.GetConnectionFactory(context.Settings);
+            OutboxPersister.Initialize(_connectionFactory);
             context.Container.ConfigureComponent<OutboxPersister>(DependencyLifecycle.InstancePerCall);
             var frequencyToRunDeduplicationDataCleanup = ReadTimeSpanConfig("NServiceBus/Outbox/PostgreSQL/FrequencyToRunDeduplicationDataCleanup", TimeSpan.FromMinutes(1));
-            timeToKeepDeduplicationData = ReadTimeSpanConfig("NServiceBus/Outbox/PostgreSQL/TimeToKeepDeduplicationData", TimeSpan.FromDays(7));
-            cleanupTimer = new Timer(PerformCleanup, null, TimeSpan.FromMinutes(1), frequencyToRunDeduplicationDataCleanup);
+            _timeToKeepDeduplicationData = ReadTimeSpanConfig("NServiceBus/Outbox/PostgreSQL/TimeToKeepDeduplicationData", TimeSpan.FromDays(7));
+            _cleanupTimer = new Timer(PerformCleanup, null, TimeSpan.FromMinutes(1), frequencyToRunDeduplicationDataCleanup);
         }
 
         private static TimeSpan ReadTimeSpanConfig(string key, TimeSpan defaultValue)
@@ -48,7 +48,7 @@
 
         void PerformCleanup(object state)
         {
-            OutboxPersister.PurgeDispatched(connectionFactory, DateTime.UtcNow - timeToKeepDeduplicationData);
+            OutboxPersister.PurgeDispatched(_connectionFactory, DateTime.UtcNow - _timeToKeepDeduplicationData);
         }
     }
 }
