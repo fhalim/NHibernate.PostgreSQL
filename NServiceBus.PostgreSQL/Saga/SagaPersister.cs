@@ -111,9 +111,9 @@
                     var typeCollapsedName = typeName.Replace('.', '_').ToLower();
 
                     var jsonFieldsExpression = String.Join(", ", UniqueAttribute.GetUniqueProperties(sagaType)
-                        .Select(f => String.Format("(sagadata -> '{0}')", f.Name)));
+                        .Select(f => String.Format("(sagadata ->> '{0}')", f.Name)));
                     var indexName = String.Format("idx_sagas_json_{0}", typeCollapsedName);
-                    var indexCreationStatement = String.Format("CREATE UNIQUE INDEX {0} ON sagas({1}) WHERE type = '{2}'",
+                    var indexCreationStatement = String.Format("CREATE UNIQUE INDEX {0} ON sagas ({1}) WHERE type = '{2}'",
                         indexName, jsonFieldsExpression, typeName
                         );
                     // Create Unique constraint for type

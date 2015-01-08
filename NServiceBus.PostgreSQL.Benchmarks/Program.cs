@@ -3,16 +3,15 @@
     using System;
     using System.IO;
     using System.Threading;
-    using Saga;
 
     internal class Program
     {
         private static void Main(string[] args)
         {
-            var benchmarks = new IBenchmark[] {new SagaPersisterBenchmark(), new OutboxPersisterBenchmark(), };
-            var iterations = 1000;
+            var benchmarks = new IBenchmark[] {new SagaPersisterBenchmark(), new OutboxPersisterBenchmark(), new TimeoutPersisterBenchmark() };
+            const int iterations = 1000;
             Console.WriteLine("Executing benchmarks. Please wait...");
-            var outfile = "log.csv";
+            const string outfile = "log.csv";
             var writeheaders = !File.Exists(outfile);
             if (!File.Exists(outfile))
             {
@@ -36,9 +35,6 @@
                     }
                 }
             }
-            
-            Console.WriteLine("Execution complete. Please press enter to stop");
-            Console.ReadLine();
         }
 
         private static void PrintHistograms()

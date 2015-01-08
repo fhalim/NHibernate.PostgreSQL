@@ -29,7 +29,7 @@
         {
             var persister = GetPersister();
             var ids = new List<Guid>(iterations);
-            TestingUtilities.BenchmarkOperation(iterations, x =>
+            yield return TestingUtilities.BenchmarkOperation(iterations, x =>
             {
                 var id = Guid.NewGuid();
                 persister.Save(new FakeSagaData {Id = id, MyOtherId = x, Message = "Message" + x});
