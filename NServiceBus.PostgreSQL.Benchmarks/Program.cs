@@ -1,13 +1,19 @@
 ﻿namespace NServiceBus.PostgreSQL.Benchmarks
 {
     using System;
+    using System.Collections.Concurrent;
     using System.IO;
+    using System.Reflection;
     using System.Threading;
+    using HdrHistogram.NET;
 
     internal class Program
     {
+        private static readonly ConcurrentDictionary<MethodBase, Histogram> MethodTimings =
+            new ConcurrentDictionary<MethodBase, Histogram>(); 
         private static void Main(string[] args)
         {
+            WireUpHistograms();
             var benchmarks = new IBenchmark[] {new SagaPersisterBenchmark(), new OutboxPersisterBenchmark(), new TimeoutPersisterBenchmark() };
             const int iterations = 1000;
             Console.WriteLine("Executing benchmarks. Please wait...");
@@ -37,9 +43,21 @@
             }
         }
 
+        private static void WireUpHistograms()
+        {
+            MethodTimeLogger.MethodExecuted += (sender, info) =>
+            {
+                var hist = MethodTimings.GetOrAdd(info.MethodBase, b => new Histogram(99999, 5));
+                lock (hist)
+                {
+                    hist.recordValue((long)info.TimeSpan.TotalMilliseconds);
+                }
+            };
+        }
+
         private static void PrintHistograms()
         {
-            foreach (var histogram in MethodTimeLogger.Histograms)
+            foreach (var histogram in MethodTimings)
             {
                 lock (histogram.Value)
                 {

@@ -36,9 +36,6 @@
     <Reference Include="Dapper">
       <HintPath>..\packages\Dapper.1.38\lib\net45\Dapper.dll</HintPath>
     </Reference>
-    <Reference Include="HdrHistogram.NET">
-      <HintPath>..\lib\HdrHistogram.NET.dll</HintPath>
-    </Reference>
     <Reference Include="MethodTimer">
       <HintPath>..\packages\MethodTimer.Fody.1.15.2.0\Lib\portable-net4+sl5+wp8+win8+wpa81+MonoAndroid16+MonoTouch40\MethodTimer.dll</HintPath>
       <Private>False</Private>
@@ -59,6 +56,7 @@
   <ItemGroup>
     <Compile Include="ConnectionFactoryHolder.cs" />
     <Compile Include="DbExtensions.cs" />
+    <Compile Include="MethodExecutionInfo.cs" />
     <Compile Include="Outbox\OutboxPersister.cs" />
     <Compile Include="Outbox\PostgreSQLOutboxStorage.cs" />
     <Compile Include="PostgreSQLPersistence.cs" />
