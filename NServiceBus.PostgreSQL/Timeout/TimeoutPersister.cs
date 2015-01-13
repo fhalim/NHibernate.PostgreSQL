@@ -6,10 +6,8 @@ namespace NServiceBus.PostgreSQL.Timeout
     using System.Linq;
     using Dapper;
     using Logging;
-    using MethodTimer;
     using Newtonsoft.Json;
     using NServiceBus.Timeout.Core;
-    using Saga;
 
     public class TimeoutPersister : IPersistTimeouts
     {

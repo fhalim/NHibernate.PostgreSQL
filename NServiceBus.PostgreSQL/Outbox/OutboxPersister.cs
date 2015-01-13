@@ -6,7 +6,6 @@ namespace NServiceBus.PostgreSQL.Outbox
     using System.Linq;
     using Dapper;
     using Logging;
-    using MethodTimer;
     using Newtonsoft.Json;
     using NServiceBus.Outbox;
 

@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
-    <NuGetPackageImportStamp>6fd9fee7</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>6bf07c88</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -36,10 +36,6 @@
     <Reference Include="Dapper">
       <HintPath>..\packages\Dapper.1.38\lib\net45\Dapper.dll</HintPath>
     </Reference>
-    <Reference Include="MethodTimer">
-      <HintPath>..\packages\MethodTimer.Fody.1.15.2.0\Lib\portable-net4+sl5+wp8+win8+wpa81+MonoAndroid16+MonoTouch40\MethodTimer.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -56,13 +52,15 @@
   <ItemGroup>
     <Compile Include="ConnectionFactoryHolder.cs" />
     <Compile Include="DbExtensions.cs" />
+    <Compile Include="IMethodDecorator.cs" />
     <Compile Include="MethodExecutionInfo.cs" />
     <Compile Include="Outbox\OutboxPersister.cs" />
     <Compile Include="Outbox\PostgreSQLOutboxStorage.cs" />
     <Compile Include="PostgreSQLPersistence.cs" />
-    <Compile Include="MethodTimeLogger.cs" />
+    <Compile Include="TimeAttribute.cs" />
     <Compile Include="Saga\PostgreSQLSagaStorage.cs" />
     <Compile Include="PostgreSQLStorageSession.cs" />
+    <Compile Include="Stats.cs" />
     <Compile Include="Timeout\PostgreSQLTimeoutStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Saga\SagaPersister.cs" />

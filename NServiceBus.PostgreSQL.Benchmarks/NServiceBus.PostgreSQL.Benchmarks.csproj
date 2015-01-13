@@ -53,6 +53,12 @@
     <Reference Include="NServiceBus.Core">
       <HintPath>..\packages\NServiceBus.5.1.2\lib\net45\NServiceBus.Core.dll</HintPath>
     </Reference>
+    <Reference Include="protobuf-net">
+      <HintPath>..\packages\protobuf-net.2.0.0.480\lib\net40\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="Riemann">
+      <HintPath>..\packages\riemann-csharp.1.0.0\lib\net40\Riemann.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -69,8 +75,12 @@
     <Compile Include="TimingInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NServiceBus.PostgreSQL.Tests\NServiceBus.PostgreSQL.Tests.csproj">
