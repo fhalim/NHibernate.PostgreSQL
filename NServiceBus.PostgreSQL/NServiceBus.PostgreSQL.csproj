@@ -67,6 +67,7 @@
     <Compile Include="Timeout\TimeoutPersister.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="NServiceBus.PostgreSQL.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

@@ -14,8 +14,11 @@
     <copyright>Copyright 2014</copyright>
     <tags>NServiceBus Messaging PostgreSQL Persistence</tags>
   </metadata>
-  <files>
-    <file src="..\lib\HdrHistogram.NET.dll" target="lib\net40" />
-    <file src="bin\Release\NserviceBus.PostgreSQL.dll" target="lib\net40" />
-  </files>
+  <dependencies>
+    <group targetFramework="net45">
+      <dependency id="Dapper" version="1.38" />
+      <dependency id="Newtonsoft.Json" version="6.0.7" />
+      <dependency id="NServiceBus" version="5.1.2" />
+    </group>
+  </dependencies>
 </package>
