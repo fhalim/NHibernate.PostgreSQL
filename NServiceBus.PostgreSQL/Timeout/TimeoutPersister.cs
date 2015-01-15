@@ -6,9 +6,7 @@ namespace NServiceBus.PostgreSQL.Timeout
     using System.Linq;
     using Dapper;
     using Logging;
-    using Newtonsoft.Json;
     using NServiceBus.Timeout.Core;
-    using Outbox;
 
     public class TimeoutPersister : IPersistTimeouts
     {
@@ -88,7 +86,7 @@ namespace NServiceBus.PostgreSQL.Timeout
                                     Destination = i.destination != null ? Address.Parse(i.destination) : null,
                                     SagaId = i.sagaid,
                                     State = i.state,
-                                    Headers = JsonConvert.DeserializeObject<Dictionary<string, string>>(i.headers),
+                                    Headers = _serializer.Deserialize<Dictionary<string, string>>(i.headers),
                                     OwningTimeoutManager = i.endpointname
                                 }).FirstOrDefault();
                 var result = timeoutData != default(TimeoutData);

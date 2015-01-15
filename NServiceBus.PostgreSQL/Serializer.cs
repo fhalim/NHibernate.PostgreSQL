@@ -11,5 +11,10 @@
         {
             return JsonConvert.SerializeObject(o, JsonSerializerSettings);
         }
+
+        public T Deserialize<T>(string contents)
+        {
+            return JsonConvert.DeserializeObject<T>(contents, JsonSerializerSettings);
+        }
     }
 }

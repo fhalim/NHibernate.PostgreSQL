@@ -6,12 +6,11 @@ namespace NServiceBus.PostgreSQL.Outbox
     using System.Linq;
     using Dapper;
     using Logging;
-    using Newtonsoft.Json;
     using NServiceBus.Outbox;
 
     public class OutboxPersister : IOutboxStorage
     {
-        static readonly ILog Logger = LogManager.GetLogger(typeof(OutboxPersister));
+        private static readonly ILog Logger = LogManager.GetLogger(typeof (OutboxPersister));
         private static readonly Serializer _serializer = new Serializer();
         private readonly Func<IDbConnection> _connectionFactory;
 
@@ -26,7 +25,8 @@ namespace NServiceBus.PostgreSQL.Outbox
             using (var conn = _connectionFactory())
             {
                 message =
-                    conn.Query<string>("SELECT transportoperations FROM outboxes WHERE messageId = :messageId", new { messageId })
+                    conn.Query<string>("SELECT transportoperations FROM outboxes WHERE messageId = :messageId",
+                        new {messageId})
                         .Select(
                             r =>
                             {
@@ -34,7 +34,7 @@ namespace NServiceBus.PostgreSQL.Outbox
                                 if (r != null)
                                 {
                                     m.TransportOperations.AddRange(
-                                        JsonConvert.DeserializeObject<List<TransportOperation>>(r));
+                                        _serializer.Deserialize<List<TransportOperation>>(r));
                                 }
                                 return m;
                             }).FirstOrDefault();

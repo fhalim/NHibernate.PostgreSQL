@@ -6,9 +6,7 @@
     using System.Linq;
     using Dapper;
     using Logging;
-    using Newtonsoft.Json;
     using NServiceBus.Saga;
-    using Outbox;
 
     public class SagaPersister : ISagaPersister
     {
@@ -55,7 +53,7 @@
                 p.Add(":id", dbType: DbType.Guid, value: sagaId);
                 var data =
                     conn.Query<string>("SELECT sagadata FROM sagas WHERE type = :type AND id = :id", p).FirstOrDefault();
-                return data == default(string) ? default(TSagaData) : JsonConvert.DeserializeObject<TSagaData>(data);
+                return data == default(string) ? default(TSagaData) : _serializer.Deserialize<TSagaData>(data);
             }
         }
         [Time]
@@ -71,7 +69,7 @@
                 var data =
                     conn.Query<string>("SELECT sagadata FROM sagas WHERE type = :type AND sagadata @> :jsonString", p)
                         .FirstOrDefault();
-                return data == default(string) ? default(TSagaData) : JsonConvert.DeserializeObject<TSagaData>(data);
+                return data == default(string) ? default(TSagaData) : _serializer.Deserialize<TSagaData>(data);
             }
         }
         [Time]
