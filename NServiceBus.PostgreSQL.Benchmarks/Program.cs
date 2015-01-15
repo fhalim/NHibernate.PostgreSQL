@@ -15,10 +15,10 @@
         private static void Main(string[] args)
         {
             var client = new Client("10.211.55.2");
-            Stats.MethodExecuted += (sender, info) => client.SendEvent(info.MethodBase.ToString(), String.Empty, String.Empty, (float)info.TimeSpan.TotalMilliseconds);
+            Stats.MethodExecuted += (sender, info) => client.SendEvent(info.MethodBase.ToString(), String.Empty, String.Empty, (float)info.TimeSpan.Ticks / 10);
             WireUpHistograms();
             var benchmarks = new IBenchmark[] {new SagaPersisterBenchmark(), new OutboxPersisterBenchmark(), new TimeoutPersisterBenchmark() };
-            const int iterations = 100000;
+            const int iterations = 1000;
             Console.WriteLine("Executing benchmarks. Please wait...");
             const string outfile = "log.csv";
             var writeheaders = !File.Exists(outfile);

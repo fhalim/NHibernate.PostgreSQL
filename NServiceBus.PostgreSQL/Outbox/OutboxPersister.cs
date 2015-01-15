@@ -12,6 +12,7 @@ namespace NServiceBus.PostgreSQL.Outbox
     public class OutboxPersister : IOutboxStorage
     {
         static readonly ILog Logger = LogManager.GetLogger(typeof(OutboxPersister));
+        private static readonly Serializer _serializer = new Serializer();
         private readonly Func<IDbConnection> _connectionFactory;
 
         public OutboxPersister(ConnectionFactoryHolder connectionFactoryHolder)
@@ -47,7 +48,7 @@ namespace NServiceBus.PostgreSQL.Outbox
             using (var conn = _connectionFactory())
             {
                 var p = new DynamicParameters(new {messageId});
-                p.Add(":transportoperations", JsonConvert.SerializeObject(transportOperations), DbType.String);
+                p.Add(":transportoperations", _serializer.Serialize(transportOperations), DbType.String);
                 conn.Execute(
                     "INSERT INTO outboxes(messageId, transportoperations) VALUES (:messageId, :transportoperations)",
                     p);

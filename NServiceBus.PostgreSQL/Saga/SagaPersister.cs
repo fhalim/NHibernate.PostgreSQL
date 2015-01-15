@@ -8,10 +8,13 @@
     using Logging;
     using Newtonsoft.Json;
     using NServiceBus.Saga;
+    using Outbox;
 
     public class SagaPersister : ISagaPersister
     {
         static readonly ILog Logger = LogManager.GetLogger(typeof(SagaPersister));
+        private static readonly Serializer _serializer = new Serializer();
+
         private static readonly Func<Type, string> TypeMapper = t => t.FullName;
         private readonly Func<IDbConnection> _connectionFactory;
 
@@ -61,8 +64,8 @@
             using (var conn = _connectionFactory())
             {
                 var p = new DynamicParameters();
-                var search = "{" + JsonConvert.SerializeObject(propertyName) + ": " +
-                             JsonConvert.SerializeObject(propertyValue) + "}";
+                var search = "{" + _serializer.Serialize(propertyName) + ": " +
+                             _serializer.Serialize(propertyValue) + "}";
                 p.Add(":type", dbType: DbType.String, value: TypeMapper(typeof (TSagaData)));
                 p.Add(":jsonString", dbType: DbType.String, value: search);
                 var data =
@@ -90,7 +93,7 @@
                 originalmessageid = saga.OriginalMessageId,
                 originator = saga.Originator
             });
-            p.Add(":sagadata", dbType: DbType.String, value: JsonConvert.SerializeObject(saga));
+            p.Add(":sagadata", dbType: DbType.String, value: _serializer.Serialize(saga));
             return p;
         }
 
