@@ -6,12 +6,12 @@ namespace NServiceBus.PostgreSQL.Timeout
     using System.Linq;
     using Dapper;
     using Logging;
-    using Newtonsoft.Json;
     using NServiceBus.Timeout.Core;
 
     public class TimeoutPersister : IPersistTimeouts
     {
         static readonly ILog Logger = LogManager.GetLogger(typeof(TimeoutPersister));
+        private static readonly Serializer _serializer = new Serializer();
         private readonly Func<IDbConnection> _connectionFactory;
 
         public TimeoutPersister(ConnectionFactoryHolder connectionFactoryHolder)
@@ -61,7 +61,7 @@ namespace NServiceBus.PostgreSQL.Timeout
                     timeout.Time,
                     EndpointName
                 });
-                timeoutInfo.Add("Headers", JsonConvert.SerializeObject(timeout.Headers));
+                timeoutInfo.Add("Headers", _serializer.Serialize(timeout.Headers));
                 conn.Execute(
                     "INSERT INTO timeouts (id, destination, sagaid, state, time, headers, endpointname) VALUES (:Id, :Destination, :SagaId, :State, :Time, :Headers, :EndpointName)",
                     timeoutInfo);
@@ -86,7 +86,7 @@ namespace NServiceBus.PostgreSQL.Timeout
                                     Destination = i.destination != null ? Address.Parse(i.destination) : null,
                                     SagaId = i.sagaid,
                                     State = i.state,
-                                    Headers = JsonConvert.DeserializeObject<Dictionary<string, string>>(i.headers),
+                                    Headers = _serializer.Deserialize<Dictionary<string, string>>(i.headers),
                                     OwningTimeoutManager = i.endpointname
                                 }).FirstOrDefault();
                 var result = timeoutData != default(TimeoutData);
